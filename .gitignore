@@ -1,0 +1,45 @@
+# Azure
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.arm.json
+
+# Secrets
+*.env
+secrets/
+*.pem
+*.key
+*.crt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Backup files
+*.backup
+*.bak
+
+# Node modules (if any)
+node_modules/
+
+# Python (if any)
+__pycache__/
+*.pyc
+.venv/
+venv/
