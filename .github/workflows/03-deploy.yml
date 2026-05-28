@@ -395,4 +395,127 @@ jobs:
           ATTEMPT=0
           
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            ATTEMPT=$((](#)
+            ATTEMPT=$((ATTEMPT + 1))
+            
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking cloud-init status..."
+            
+            # Check cloud-init status via Azure VM run-command
+            CLOUD_INIT_STATUS=$(az vm run-command invoke \
+              --resource-group "$RG_NAME" \
+              --name "$VM_NAME" \
+              --command-id RunShellScript \
+              --scripts "cloud-init status --wait --long || cloud-init status" \
+              --query "value[0].message" \
+              -o tsv 2>/dev/null || echo "status: error")
+            
+            echo "   Status: $CLOUD_INIT_STATUS"
+            
+            if echo "$CLOUD_INIT_STATUS" | grep -q "status: done"; then
+              echo "✅ cloud-init completed successfully"
+              break
+            fi
+            
+            if echo "$CLOUD_INIT_STATUS" | grep -q "status: error"; then
+              echo "⚠️  cloud-init reported an error"
+              echo ""
+              echo "Fetching cloud-init logs..."
+              az vm run-command invoke \
+                --resource-group "$RG_NAME" \
+                --name "$VM_NAME" \
+                --command-id RunShellScript \
+                --scripts "tail -100 /var/log/cloud-init-output.log" \
+                --query "value[0].message" \
+                -o tsv
+              exit 1
+            fi
+            
+            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+              echo "⚠️  Timeout waiting for cloud-init"
+              echo "   Fetching logs for troubleshooting..."
+              az vm run-command invoke \
+                --resource-group "$RG_NAME" \
+                --name "$VM_NAME" \
+                --command-id RunShellScript \
+                --scripts "tail -100 /var/log/cloud-init-output.log" \
+                --query "value[0].message" \
+                -o tsv
+              exit 1
+            fi
+            
+            sleep 15
+          done
+          
+          echo ""
+          echo "✅ cloud-init setup complete"
+      
+      - name: Verify n8n deployment
+        run: |
+          echo "🔍 Verifying n8n deployment..."
+          echo ""
+          
+          N8N_URL="${{ steps.deploy_bicep.outputs.n8n_url }}"
+          
+          echo "Testing n8n URL: $N8N_URL"
+          echo ""
+          
+          MAX_ATTEMPTS=20
+          ATTEMPT=0
+          
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$N8N_URL" || echo "000")
+            
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: HTTP Status = $HTTP_STATUS"
+            
+            if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
+              echo "✅ n8n is responding correctly"
+              break
+            fi
+            
+            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+              echo "⚠️  n8n is not responding yet"
+              echo "   This might be normal if SSL certificates are still being provisioned"
+              echo "   Check manually: $N8N_URL"
+            fi
+            
+            sleep 10
+          done
+          
+          echo ""
+          echo "✅ Deployment verification complete"
+      
+      - name: Display deployment summary
+        if: always()
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🎉 Deployment Summary"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📋 Resource Information:"
+          echo "   Resource Group: ${{ needs.validate.outputs.rg_name }}"
+          echo "   Location: ${{ needs.validate.outputs.region }}"
+          echo "   Environment: ${{ needs.validate.outputs.environment }}"
+          echo ""
+          echo "🖥️  VM Details:"
+          echo "   VM Name: ${{ steps.deploy_bicep.outputs.vm_name }}"
+          echo "   Public IP: ${{ steps.deploy_bicep.outputs.public_ip }}"
+          echo "   Azure FQDN: ${{ steps.deploy_bicep.outputs.fqdn }}"
+          echo ""
+          echo "🔐 SSH Access:"
+          echo "   ${{ steps.deploy_bicep.outputs.ssh_command }}"
+          echo ""
+          echo "🌐 n8n Access:"
+          echo "   URL: ${{ steps.deploy_bicep.outputs.n8n_url }}"
+          echo ""
+          echo "⚡ Next Steps:"
+          echo "   1. Access n8n at the URL above"
+          echo "   2. Create your admin account"
+          echo "   3. Start building workflows!"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          ATTEMPT=0
+          
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
