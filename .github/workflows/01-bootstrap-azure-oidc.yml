@@ -21,9 +21,21 @@ on:
         required: false
         default: false
         type: boolean
-      azure_credentials:
-        description: 'Azure Service Principal JSON (clientId, clientSecret, tenantId, subscriptionId)'
+      azure_client_id:
+        description: 'Azure Service Principal Client ID (temporary, for bootstrap only)'
         required: true
+        type: string
+      azure_client_secret:
+        description: 'Azure Service Principal Client Secret (temporary, for bootstrap only)'
+        required: true
+        type: string
+      azure_tenant_id:
+        description: 'Azure Tenant ID (leave empty to use repository secret)'
+        required: false
+        type: string
+      azure_subscription_id:
+        description: 'Azure Subscription ID (leave empty to use repository secret)'
+        required: false
         type: string
 
 permissions:
@@ -94,40 +106,36 @@ jobs:
           
           echo "✅ All required secrets found"
       
-      - name: Parse Azure credentials
+      - name: Prepare Azure credentials
         id: parse_creds
         run: |
-          echo "🔍 Parsing Azure credentials..."
+          echo "🔍 Preparing Azure credentials..."
           
-          CREDS='${{ inputs.azure_credentials }}'
+          CLIENT_ID="${{ inputs.azure_client_id }}"
+          CLIENT_SECRET="${{ inputs.azure_client_secret }}"
           
-          # Extract values from JSON
-          CLIENT_ID=$(echo "$CREDS" | jq -r '.clientId // .appId // empty')
-          CLIENT_SECRET=$(echo "$CREDS" | jq -r '.clientSecret // .password // empty')
-          TENANT_ID=$(echo "$CREDS" | jq -r '.tenantId // .tenant // empty')
-          SUB_ID=$(echo "$CREDS" | jq -r '.subscriptionId // .subscription // empty')
-          
-          # Validate extracted values
-          if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
-            echo "❌ Invalid Azure credentials JSON"
-            echo ""
-            echo "Expected format:"
-            echo '{'
-            echo '  "clientId": "xxx-xxx-xxx",'
-            echo '  "clientSecret": "xxx",'
-            echo '  "tenantId": "xxx-xxx-xxx",'
-            echo '  "subscriptionId": "xxx-xxx-xxx"'
-            echo '}'
-            exit 1
+          # Use inputs or fall back to secrets
+          if [ -n "${{ inputs.azure_tenant_id }}" ]; then
+            TENANT_ID="${{ inputs.azure_tenant_id }}"
+          else
+            TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
           fi
           
-          # Use subscription from secret if not in credentials
-          if [ -z "$SUB_ID" ]; then
+          if [ -n "${{ inputs.azure_subscription_id }}" ]; then
+            SUB_ID="${{ inputs.azure_subscription_id }}"
+          else
             SUB_ID="${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           fi
           
-          if [ -z "$TENANT_ID" ]; then
-            TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
+          # Validate required values
+          if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
+            echo "❌ Client ID and Client Secret are required"
+            exit 1
+          fi
+          
+          if [ -z "$TENANT_ID" ] || [ -z "$SUB_ID" ]; then
+            echo "❌ Tenant ID and Subscription ID must be provided (either as input or in secrets)"
+            exit 1
           fi
           
           echo "client_id=$CLIENT_ID" >> $GITHUB_OUTPUT
@@ -138,7 +146,7 @@ jobs:
           echo "::add-mask::$CLIENT_SECRET"
           echo "client_secret=$CLIENT_SECRET" >> $GITHUB_OUTPUT
           
-          echo "✅ Credentials parsed successfully"
+          echo "✅ Credentials prepared successfully"
       
       - name: Login to Azure with provided credentials
         run: |
