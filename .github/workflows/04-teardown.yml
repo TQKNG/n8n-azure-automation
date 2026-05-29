@@ -54,8 +54,14 @@ jobs:
           fi
           
           # Validate resource group name format
-          if [[ ! "$RG_NAME" =~ ^rg-n8n- ]]; then
-            echo "❌ Resource group name must start with 'rg-n8n-'"
+          # Only allow deletion of n8n resource groups or Azure NetworkWatcher groups
+          if [[ ! "$RG_NAME" =~ ^rg-n8n- ]] || [[ ! "$RG_NAME" =~ ^NetworkWatcherRG ]]; then
+            echo "❌ Invalid resource group name."
+            echo "   Only these patterns are allowed for deletion:"
+            echo "   • rg-n8n-*  (n8n project resource groups)"
+            echo "   • NetworkWatcherRG*  (Azure Network Watcher groups)"
+            echo ""
+            echo "   You provided: $RG_NAME"
             exit 1
           fi
           
