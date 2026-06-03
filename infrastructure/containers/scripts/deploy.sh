@@ -134,6 +134,3 @@ log "   1. Check logs: docker logs n8n"
 log "   2. Check logs: docker logs caddy"
 log "   3. Verify: curl -k https://localhost/healthz"
 log ""
-EOF
-
-chmod +x infrastructure/containers/scripts/deploy.sh

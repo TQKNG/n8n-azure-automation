@@ -76,6 +76,15 @@ var caddyEnv = replace(
     '{{DOMAIN_NAME}}', domainName),
   '{{TLS_EMAIL}}', tlsEmail)
 
+// Indent rendered text for YAML block scalars
+var dockerComposeText = replace(dockerComposeYaml, '\n', '\n      ')
+var n8nEnvText = replace(n8nEnv, '\n', '\n      ')
+var caddyfileText = replace(caddyfile, '\n', '\n      ')
+var caddyEnvText = replace(caddyEnv, '\n', '\n      ')
+var deployScriptText = replace(deployScript, '\n', '\n      ')
+var backupScriptText = replace(backupScript, '\n', '\n      ')
+var healthCheckScriptText = replace(healthCheckScript, '\n', '\n      ')
+
 // Explicit reference so the analyzer sees these template sources as used
 var templateSourceCount = length([
   dockerComposeYaml
@@ -88,6 +97,13 @@ var templateSourceCount = length([
   caddyfile
   n8nEnv
   caddyEnv
+  dockerComposeText
+  n8nEnvText
+  caddyfileText
+  caddyEnvText
+  deployScriptText
+  backupScriptText
+  healthCheckScriptText
 ])
 
 // ============================================================================
@@ -123,26 +139,26 @@ write_files:
   # ============================================================================
   
   - path: /opt/n8n/docker-compose.yml
-    encoding: b64
-    content: ${base64(dockerComposeYaml)}
+    content: |
+      ${dockerComposeText}
     owner: root:root
     permissions: '0644'
 
   - path: /opt/n8n/.env
-    encoding: b64
-    content: ${base64(n8nEnv)}
+    content: |
+      ${n8nEnvText}
     owner: root:root
     permissions: '0600'
   
   - path: /opt/n8n/caddy/Caddyfile
-    encoding: b64
-    content: ${base64(caddyfile)}
+    content: |
+      ${caddyfileText}
     owner: root:root
     permissions: '0644'
 
   - path: /opt/n8n/caddy/.env
-    encoding: b64
-    content: ${base64(caddyEnv)}
+    content: |
+      ${caddyEnvText}
     owner: root:root
     permissions: '0600'
   
@@ -151,20 +167,20 @@ write_files:
   # ============================================================================
   
   - path: /opt/n8n/scripts/deploy.sh
-    encoding: b64
-    content: ${base64(deployScript)}
+    content: |
+      ${deployScriptText}
     owner: root:root
     permissions: '0755'
   
   - path: /opt/n8n/scripts/backup.sh
-    encoding: b64
-    content: ${base64(backupScript)}
+    content: |
+      ${backupScriptText}
     owner: root:root
     permissions: '0755'
   
   - path: /opt/n8n/scripts/health-check.sh
-    encoding: b64
-    content: ${base64(healthCheckScript)}
+    content: |
+      ${healthCheckScriptText}
     owner: root:root
     permissions: '0755'
   

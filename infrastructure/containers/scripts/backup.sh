@@ -52,6 +52,3 @@ echo "🧹 Cleaned up old backups (keeping last 7)"
 
 echo ""
 echo "✅ Backup complete!"
-EOF
-
-chmod +x infrastructure/containers/scripts/backup.sh

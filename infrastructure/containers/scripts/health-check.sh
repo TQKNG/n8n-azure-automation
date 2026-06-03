@@ -54,6 +54,3 @@ docker volume ls | grep n8n
 
 echo ""
 echo "✅ Health check complete"
-EOF
-
-chmod +x infrastructure/containers/scripts/health-check.sh
