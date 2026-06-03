@@ -17,9 +17,6 @@ param adminUsername string
 @description('TLS email for Let\'s Encrypt')
 param tlsEmail string = 'admin@${domainName}'
 
-@description('Deployment timestamp')
-param deploymentTime string = utcNow()
-
 @description('Environment')
 param environment string = 'production'
 
@@ -65,13 +62,11 @@ var n8nEnv = replace(
     replace(
       replace(
         replace(
-          replace(
-            n8nEnvTemplate,
-            '{{DOMAIN_NAME}}', domainName),
-          '{{N8N_VERSION}}', n8nVersion),
-        '{{ENCRYPTION_KEY}}', n8nEncryptionKey),
-      '{{TLS_EMAIL}}', tlsEmail),
-    '{{DEPLOYMENT_TIME}}', deploymentTime),
+          n8nEnvTemplate,
+          '{{DOMAIN_NAME}}', domainName),
+        '{{N8N_VERSION}}', n8nVersion),
+      '{{ENCRYPTION_KEY}}', n8nEncryptionKey),
+    '{{TLS_EMAIL}}', tlsEmail),
   '{{ENVIRONMENT}}', environment)
 
 // Replace placeholders in Caddy env template
@@ -502,6 +497,5 @@ output configSummary object = {
   adminUser: adminUsername
   tlsEmail: tlsEmail
   environment: environment
-  deploymentTime: deploymentTime
   templateSourceCount: templateSourceCount
 }
