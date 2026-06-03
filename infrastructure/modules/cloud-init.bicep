@@ -319,9 +319,9 @@ runcmd:
   
   - echo "=========================================="
   - echo "n8n Deployment Started"
-  - echo "Time: $(date)"
-  - echo "Domain: ${domainName}"
-  - echo "Version: ${n8nVersion}"
+  - 'echo "Time: $(date)"'
+  - 'echo "Domain: ${domainName}"'
+  - 'echo "Version: ${n8nVersion}"'
   - echo "=========================================="
   
   # ============================================================================
@@ -415,7 +415,7 @@ runcmd:
     Admin User: ${adminUsername}
     
     Container Status:
-    $(docker ps --format "table {{.Names}}\t{{.Status}}")
+    $(docker ps -a)
     
     Access:
     - URL: https://${domainName}
@@ -445,19 +445,19 @@ runcmd:
   - echo "✅ n8n Deployment Complete!"
   - echo "=========================================="
   - echo ""
-  - echo "📋 Deployment Summary:"
+  - 'echo "📋 Deployment Summary:"'
   - cat /opt/n8n/deployment-status.txt
   - echo ""
-  - echo "🌐 Next Steps:"
+  - 'echo "🌐 Next Steps:"'
   - echo "1. Configure DNS A record to point to this server"
   - echo "2. Wait 5-10 minutes for SSL certificate"
-  - echo "3. Access n8n at: https://${domainName}"
+  - 'echo "3. Access n8n at: https://${domainName}"'
   - echo ""
-  - echo "📊 Useful Commands:"
-  - echo "  - View status: /opt/n8n/scripts/monitor.sh"
-  - echo "  - View logs: docker logs n8n -f"
-  - echo "  - Backup now: /opt/n8n/scripts/backup.sh"
-  - echo "  - Health check: /opt/n8n/scripts/health-check.sh"
+  - 'echo "📊 Useful Commands:"'
+  - 'echo "  - View status: /opt/n8n/scripts/monitor.sh"'
+  - 'echo "  - View logs: docker logs n8n -f"'
+  - 'echo "  - Backup now: /opt/n8n/scripts/backup.sh"'
+  - 'echo "  - Health check: /opt/n8n/scripts/health-check.sh"'
   - echo ""
 
 final_message: |
