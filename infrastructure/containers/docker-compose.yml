@@ -98,14 +98,13 @@ services:
     container_name: caddy
     restart: unless-stopped
     
+    env_file:
+      - ./caddy/.env
+
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"  # HTTP/3 support
-    
-    environment:
-      - DOMAIN=${N8N_HOST}
-      - TLS_EMAIL=${TLS_EMAIL:-admin@${N8N_HOST}}
     
     volumes:
       # Caddy configuration

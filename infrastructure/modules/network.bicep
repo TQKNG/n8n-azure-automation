@@ -43,7 +43,7 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   ]
 }
 
-// Virtual Network
+// Virtual Network - Subnet
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   name: '${baseName}-vnet'
   location: location
@@ -70,7 +70,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   }
 }
 
-// Network Interface
+// Network Interface -NIC
 resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
   name: '${baseName}-nic'
   location: location

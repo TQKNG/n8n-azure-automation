@@ -5,10 +5,10 @@
 # Global Options
 {
     # Email for Let's Encrypt notifications
-    email {{TLS_EMAIL}}
+    email {$TLS_EMAIL}
     
     # Admin API endpoint
-    admin :2019
+    admin {$CADDY_ADMIN}
     
     # Enable HTTP/3
     servers {
@@ -20,12 +20,12 @@
     # Log format
     log {
         format json
-        level INFO
+        level {$LOG_LEVEL}
     }
 }
 
 # Main n8n site
-{{DOMAIN_NAME}} {
+{$DOMAIN} {
     # Reverse proxy to n8n
     reverse_proxy n8n:5678 {
         # Health checks
@@ -115,8 +115,8 @@
 }
 
 # Redirect www to non-www (optional)
-# www.{{DOMAIN_NAME}} {
-#     redir https://{{DOMAIN_NAME}}{uri} permanent
+# www.{$DOMAIN} {
+#     redir https://{$DOMAIN}{uri} permanent
 # }
 
 # Health check endpoint for monitoring
