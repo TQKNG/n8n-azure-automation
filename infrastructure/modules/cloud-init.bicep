@@ -381,7 +381,8 @@ runcmd:
   # ============================================================================
   
   - echo "🔄 Configuring automatic updates..."
-  - dpkg-reconfigure -plow unattended-upgrades
+  - 'echo "unattended-upgrades unattended-upgrades/enable_auto_updates boolean true" | debconf-set-selections'
+  - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive unattended-upgrades || true
   - echo "✅ Automatic updates configured"
   
   # ============================================================================
