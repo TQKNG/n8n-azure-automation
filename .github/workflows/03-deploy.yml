@@ -447,6 +447,58 @@ jobs:
           
           echo ""
           echo "✅ cloud-init setup complete"
+
+      - name: Run n8n deployment script on VM
+        run: |
+          echo "🚀 Running n8n deployment script on VM..."
+          echo ""
+
+          RG_NAME="${{ needs.validate.outputs.rg_name }}"
+          VM_NAME="${{ steps.deploy_bicep.outputs.vm_name }}"
+
+          DEPLOY_OUTPUT=$(az vm run-command invoke \
+            --resource-group "$RG_NAME" \
+            --name "$VM_NAME" \
+            --command-id RunShellScript \
+            --scripts "set -e; if [ ! -f /opt/n8n/scripts/deploy.sh ]; then echo 'ERROR: /opt/n8n/scripts/deploy.sh not found'; exit 1; fi; sudo /opt/n8n/scripts/deploy.sh; sudo docker compose -f /opt/n8n/docker-compose.yml ps" \
+            --query "value[0].message" \
+            -o tsv)
+
+          echo "$DEPLOY_OUTPUT"
+          echo ""
+          echo "✅ VM deployment script completed"
+
+      - name: Verify containers on VM
+        run: |
+          echo "🔍 Verifying containers on VM..."
+          echo ""
+
+          RG_NAME="${{ needs.validate.outputs.rg_name }}"
+          VM_NAME="${{ steps.deploy_bicep.outputs.vm_name }}"
+
+          VERIFY_OUTPUT=$(az vm run-command invoke \
+            --resource-group "$RG_NAME" \
+            --name "$VM_NAME" \
+            --command-id RunShellScript \
+            --scripts "set -e; docker ps -a --format '{{.Names}} {{.Status}}'; if ! docker ps -a --format '{{.Names}}' | grep -qx 'n8n'; then echo 'ERROR: n8n container missing'; exit 1; fi; if ! docker ps -a --format '{{.Names}}' | grep -qx 'caddy'; then echo 'ERROR: caddy container missing'; exit 1; fi; if ! docker ps --format '{{.Names}}' | grep -qx 'n8n'; then echo 'ERROR: n8n container not running'; exit 1; fi; if ! docker ps --format '{{.Names}}' | grep -qx 'caddy'; then echo 'ERROR: caddy container not running'; exit 1; fi" \
+            --query "value[0].message" \
+            -o tsv) || {
+              echo "❌ Container verification failed"
+              echo ""
+              echo "📋 Collecting VM diagnostics..."
+              az vm run-command invoke \
+                --resource-group "$RG_NAME" \
+                --name "$VM_NAME" \
+                --command-id RunShellScript \
+                --scripts "echo '=== docker ps -a ==='; docker ps -a; echo ''; echo '=== docker compose ps ==='; docker compose -f /opt/n8n/docker-compose.yml ps || true; echo ''; echo '=== deploy log ==='; tail -100 /var/log/n8n/deployment.log || true; echo ''; echo '=== cloud-init output ==='; tail -100 /var/log/cloud-init-output.log || true; echo ''; echo '=== caddy logs ==='; docker logs caddy --tail 100 || true; echo ''; echo '=== n8n logs ==='; docker logs n8n --tail 100 || true" \
+                --query "value[0].message" \
+                -o tsv || true
+              exit 1
+            }
+
+          echo "$VERIFY_OUTPUT"
+          echo ""
+          echo "✅ VM containers verified"
       
       - name: Verify n8n deployment
         run: |
