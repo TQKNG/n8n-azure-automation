@@ -9,19 +9,6 @@
     
     # Admin API endpoint
     admin {$CADDY_ADMIN}
-    
-    # Enable HTTP/3
-    servers {
-        protocol {
-            experimental_http3
-        }
-    }
-    
-    # Log format
-    log {
-        format json
-        level {$LOG_LEVEL}
-    }
 }
 
 # Main n8n site
