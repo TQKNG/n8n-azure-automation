@@ -9,6 +9,7 @@
     
     # Admin API endpoint
     admin {$CADDY_ADMIN}
+    
 }
 
 # Main n8n site
