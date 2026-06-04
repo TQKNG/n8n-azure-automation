@@ -114,7 +114,7 @@ var templateSourceCount = length([
 // Generate Cloud-Init Configuration
 // ============================================================================
 
-var cloudInitConfig = '''
+var cloudInitTemplate = '''
 #cloud-config
 
 # n8n Automated Deployment
@@ -140,25 +140,25 @@ write_files:
   
   - path: /opt/n8n/docker-compose.yml
     content: |
-      ${dockerComposeText}
+      __DOCKER_COMPOSE_TEXT__
     owner: root:root
     permissions: '0644'
 
   - path: /opt/n8n/.env
     content: |
-      ${n8nEnvText}
+      __N8N_ENV_TEXT__
     owner: root:root
     permissions: '0600'
   
   - path: /opt/n8n/caddy/Caddyfile
     content: |
-      ${caddyfileText}
+      __CADDYFILE_TEXT__
     owner: root:root
     permissions: '0644'
 
   - path: /opt/n8n/caddy/.env
     content: |
-      ${caddyEnvText}
+      __CADDY_ENV_TEXT__
     owner: root:root
     permissions: '0600'
   
@@ -168,19 +168,19 @@ write_files:
   
   - path: /opt/n8n/scripts/deploy.sh
     content: |
-      ${deployScriptText}
+      __DEPLOY_SCRIPT_TEXT__
     owner: root:root
     permissions: '0755'
   
   - path: /opt/n8n/scripts/backup.sh
     content: |
-      ${backupScriptText}
+      __BACKUP_SCRIPT_TEXT__
     owner: root:root
     permissions: '0755'
   
   - path: /opt/n8n/scripts/health-check.sh
     content: |
-      ${healthCheckScriptText}
+      __HEALTH_CHECK_SCRIPT_TEXT__
     owner: root:root
     permissions: '0755'
   
@@ -331,8 +331,8 @@ runcmd:
   - echo "=========================================="
   - echo "n8n Deployment Started"
   - 'echo "Time: $(date)"'
-  - 'echo "Domain: ${domainName}"'
-  - 'echo "Version: ${n8nVersion}"'
+  - 'echo "Domain: __DOMAIN_NAME__"'
+  - 'echo "Version: __N8N_VERSION__"'
   - echo "=========================================="
   
   # ============================================================================
@@ -342,7 +342,7 @@ runcmd:
   - echo "📦 Installing Docker..."
   - curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
   - sh /tmp/get-docker.sh
-  - usermod -aG docker ${adminUsername}
+  - usermod -aG docker __ADMIN_USERNAME__
   - systemctl enable docker
   - systemctl start docker
   - echo "✅ Docker installed"
@@ -363,11 +363,11 @@ runcmd:
   # ============================================================================
   
   - echo "📁 Creating directory structure..."
-  - mkdir -p /opt/n8n/{caddy,n8n,backups,scripts}
-  - mkdir -p /var/log/{n8n,caddy}
+  - mkdir -p /opt/n8n/caddy /opt/n8n/n8n /opt/n8n/backups /opt/n8n/scripts
+  - mkdir -p /var/log/n8n /var/log/caddy
   - mkdir -p /opt/n8n/caddy/logs
-  - chown -R ${adminUsername}:${adminUsername} /opt/n8n
-  - chown -R ${adminUsername}:${adminUsername} /var/log/n8n
+  - chown -R __ADMIN_USERNAME__:__ADMIN_USERNAME__ /opt/n8n
+  - chown -R __ADMIN_USERNAME__:__ADMIN_USERNAME__ /var/log/n8n
   - echo "✅ Directories created"
   
   # ============================================================================
@@ -421,17 +421,17 @@ runcmd:
     =================
     
     Completed: $(date)
-    Domain: ${domainName}
-    n8n Version: ${n8nVersion}
-    Environment: ${environment}
-    Admin User: ${adminUsername}
+    Domain: __DOMAIN_NAME__
+    n8n Version: __N8N_VERSION__
+    Environment: __ENVIRONMENT__
+    Admin User: __ADMIN_USERNAME__
     
     Container Status:
     $(docker ps -a)
     
     Access:
-    - URL: https://${domainName}
-    - SSH: ssh ${adminUsername}@$(hostname -I | awk '{print $1}')
+    - URL: https://__DOMAIN_NAME__
+    - SSH: ssh __ADMIN_USERNAME__@$(hostname -I | awk '{print $1}')
     
     Logs:
     - n8n: docker logs n8n
@@ -463,7 +463,7 @@ runcmd:
   - 'echo "🌐 Next Steps:"'
   - echo "1. Configure DNS A record to point to this server"
   - echo "2. Wait 5-10 minutes for SSL certificate"
-  - 'echo "3. Access n8n at: https://${domainName}"'
+  - 'echo "3. Access n8n at: https://__DOMAIN_NAME__"'
   - echo ""
   - 'echo "📊 Useful Commands:"'
   - 'echo "  - View status: /opt/n8n/scripts/monitor.sh"'
@@ -475,11 +475,37 @@ runcmd:
 final_message: |
   n8n deployment complete!
   
-  Access your instance at: https://${domainName}
+  Access your instance at: https://__DOMAIN_NAME__
   
   View deployment status: cat /opt/n8n/deployment-status.txt
   Monitor containers: /opt/n8n/scripts/monitor.sh
 '''
+
+var cloudInitConfig = replace(
+  replace(
+    replace(
+      replace(
+        replace(
+          replace(
+            replace(
+              replace(
+                replace(
+                  replace(
+                    replace(
+                      replace(
+                        cloudInitTemplate,
+                        '__DOCKER_COMPOSE_TEXT__', dockerComposeText),
+                      '__N8N_ENV_TEXT__', n8nEnvText),
+                    '__CADDYFILE_TEXT__', caddyfileText),
+                  '__CADDY_ENV_TEXT__', caddyEnvText),
+                '__DEPLOY_SCRIPT_TEXT__', deployScriptText),
+              '__BACKUP_SCRIPT_TEXT__', backupScriptText),
+            '__HEALTH_CHECK_SCRIPT_TEXT__', healthCheckScriptText),
+          '__DOMAIN_NAME__', domainName),
+        '__N8N_VERSION__', n8nVersion),
+      '__ENVIRONMENT__', environment),
+    '__ADMIN_USERNAME__', adminUsername),
+  '__TLS_EMAIL__', tlsEmail)
 
 // ============================================================================
 // Outputs
