@@ -15,10 +15,19 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      - name: Select auth token source
+        run: |
+          if [ -n "${{ secrets.GH_PAT }}" ]; then
+            echo "Using GH_PAT"
+          else
+            echo "Using GITHUB_TOKEN"
+            echo "If PR creation fails, enable repository setting: Allow GitHub Actions to create and approve pull requests"
+          fi
+
       - name: Run Release Please
         id: release
         uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json

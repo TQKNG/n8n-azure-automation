@@ -196,30 +196,7 @@ for module in infrastructure/modules/*.bicep; do
 done
 ```
 
-## Versioning and Automatic Releases
 
-This repository uses Semantic Versioning (`vMAJOR.MINOR.PATCH`) with automated release management.
-
-How it works:
-1. Pull requests must use Conventional Commit style in PR titles (validated by `06-pr-title-lint.yml`).
-2. Pushes to `main` trigger `07-release-please.yml`.
-3. Release Please creates or updates a release PR that:
-	- updates `CHANGELOG.md`
-	- updates `.release-please-manifest.json`
-4. When the release PR is merged, Release Please creates:
-	- Git tag (for example `v0.2.0`)
-	- GitHub Release
-5. Published release events trigger `08-sync-version-file.yml` to mirror the tag version into `.version`.
-
-Conventional PR title examples:
-- `feat: add staging deployment inputs`
-- `fix: handle cloud-init timeout retries`
-- `docs: clarify DNS cutover step`
-- `feat!: change default network CIDR`
-
-Breaking changes:
-- Use `!` in the PR title (for example `feat!: ...`) or include a `BREAKING CHANGE:` note in the PR description/body.
-- This causes a major version bump.
 
 ## Versioning and License
 
