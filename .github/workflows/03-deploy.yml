@@ -342,7 +342,7 @@ jobs:
           echo "   n8n URL: $N8N_URL"
           echo "   SSH: $SSH_CMD"
           echo ""
-      
+
       - name: Wait for VM provisioning
         run: |
           echo "⏳ Waiting for VM to be fully provisioned..."
@@ -447,13 +447,77 @@ jobs:
           
           echo ""
           echo "✅ cloud-init setup complete"
-      
+
+      - name: Deployment paused for manual DNS update
+        run: |
+          echo "⏸️ Deployment paused for DNS update"
+          echo ""
+          echo "Update your DNS A record to point to this VM public IP: ${{ steps.deploy_bicep.outputs.public_ip }}"
+          echo "Domain: ${{ needs.validate.outputs.domain }}"
+          echo ""
+          echo "Then approve the next job (environment: dns-confirmation) to continue with Caddy restart."
+
+  post_dns:
+    runs-on: ubuntu-latest
+    needs: [validate, deploy]
+    environment: ${{ needs.validate.outputs.environment }}
+
+    steps:
+      - name: Azure Login via OIDC
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Confirm DNS resolution
+        run: |
+          echo "🔍 Checking DNS before Caddy restart..."
+          echo ""
+
+          DOMAIN="${{ needs.validate.outputs.domain }}"
+          TARGET_IP="${{ needs.deploy.outputs.public_ip }}"
+
+          RESOLVED_CF=$(nslookup "$DOMAIN" 1.1.1.1 2>/dev/null | awk '/^Address: / {print $2}' | tail -n 1)
+          RESOLVED_GOOGLE=$(nslookup "$DOMAIN" 8.8.8.8 2>/dev/null | awk '/^Address: / {print $2}' | tail -n 1)
+
+          echo "Cloudflare (1.1.1.1): ${RESOLVED_CF:-unresolved}"
+          echo "Google (8.8.8.8):     ${RESOLVED_GOOGLE:-unresolved}"
+          echo "Target IP:             $TARGET_IP"
+
+          if [ "$RESOLVED_CF" != "$TARGET_IP" ] || [ "$RESOLVED_GOOGLE" != "$TARGET_IP" ]; then
+            echo "⚠️ DNS has not fully propagated to target IP yet."
+            echo "   Continuing because this job was manually approved."
+          else
+            echo "✅ DNS resolves to target IP"
+          fi
+
+      - name: Restart Caddy on VM
+        run: |
+          echo "🔄 Restarting Caddy container on VM..."
+          echo ""
+
+          RG_NAME="${{ needs.validate.outputs.rg_name }}"
+          VM_NAME="${{ needs.deploy.outputs.vm_name }}"
+
+          RESTART_OUTPUT=$(az vm run-command invoke \
+            --resource-group "$RG_NAME" \
+            --name "$VM_NAME" \
+            --command-id RunShellScript \
+            --scripts "set -e; sudo docker restart caddy; sleep 5; sudo docker ps --filter name=caddy; sudo docker logs caddy --tail 50" \
+            --query "value[0].message" \
+            -o tsv)
+
+          echo "$RESTART_OUTPUT"
+          echo ""
+          echo "✅ Caddy restart completed"
+
       - name: Verify n8n deployment
         run: |
           echo "🔍 Verifying n8n deployment..."
           echo ""
           
-          N8N_URL="${{ steps.deploy_bicep.outputs.n8n_url }}"
+          N8N_URL="${{ needs.deploy.outputs.n8n_url }}"
           
           echo "Testing n8n URL: $N8N_URL"
           echo ""
@@ -499,15 +563,15 @@ jobs:
           echo "   Environment: ${{ needs.validate.outputs.environment }}"
           echo ""
           echo "🖥️  VM Details:"
-          echo "   VM Name: ${{ steps.deploy_bicep.outputs.vm_name }}"
-          echo "   Public IP: ${{ steps.deploy_bicep.outputs.public_ip }}"
-          echo "   Azure FQDN: ${{ steps.deploy_bicep.outputs.fqdn }}"
+          echo "   VM Name: ${{ needs.deploy.outputs.vm_name }}"
+          echo "   Public IP: ${{ needs.deploy.outputs.public_ip }}"
+          echo "   Azure FQDN: ${{ needs.deploy.outputs.fqdn }}"
           echo ""
           echo "🔐 SSH Access:"
-          echo "   ${{ steps.deploy_bicep.outputs.ssh_command }}"
+          echo "   ${{ needs.deploy.outputs.ssh_command }}"
           echo ""
           echo "🌐 n8n Access:"
-          echo "   URL: ${{ steps.deploy_bicep.outputs.n8n_url }}"
+          echo "   URL: ${{ needs.deploy.outputs.n8n_url }}"
           echo ""
           echo "⚡ Next Steps:"
           echo "   1. Access n8n at the URL above"
