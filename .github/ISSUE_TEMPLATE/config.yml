@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/TQKNG/n8n-azure-automation/blob/main/README.md
+    about: Read setup, deployment, and operations guidance
+  - name: Security vulnerability report
+    url: https://github.com/TQKNG/n8n-azure-automation/security/advisories/new
+    about: Please report security issues privately

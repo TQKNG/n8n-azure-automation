@@ -1,0 +1,66 @@
+name: Feature request
+description: Suggest an improvement to infrastructure, automation workflows, or developer experience
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Good feature requests include the problem, proposed solution, and impact.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Proposed area
+      options:
+        - GitHub Actions workflow
+        - Azure provisioning
+        - Security hardening
+        - Observability and operations
+        - Backup and restore
+        - Documentation and onboarding
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve?
+      placeholder: As a maintainer, I need...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe your preferred approach
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What alternatives did you evaluate?
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and impact
+      description: What will this affect and who benefits?
+      placeholder: |
+        - Workflows impacted:
+        - Infra modules impacted:
+        - Backward compatibility considerations:
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: Optional implementation details
+      options:
+        - label: I can contribute a pull request for this feature
+        - label: This change may require updates to README or workflow docs
+        - label: This change may require migration guidance

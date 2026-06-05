@@ -1,0 +1,44 @@
+name: Question or support request
+description: Ask for help with setup, deployment, troubleshooting, or usage
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for usage and troubleshooting questions.
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options:
+        - Initial repository setup
+        - Azure OIDC bootstrap
+        - Deployment workflow
+        - DNS and TLS setup
+        - n8n runtime and operations
+        - Teardown and cleanup
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: Include what you tried and where you are blocked
+    validations:
+      required: true
+
+  - type: input
+    id: run_url
+    attributes:
+      label: Workflow run URL
+      description: If related to GitHub Actions, include run link
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Environment, command output, screenshots, or links
