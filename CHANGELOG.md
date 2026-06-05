@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3](https://github.com/TQKNG/n8n-azure-automation/compare/v0.1.2...v0.1.3) (2026-06-05)
+
+
+### Bug Fixes
+
+* release tag in wf08 ([18163e0](https://github.com/TQKNG/n8n-azure-automation/commit/18163e05e22fe2415fd5e387cbc97ac339c1dea5))
+* release tag in wf08 ([141c92b](https://github.com/TQKNG/n8n-azure-automation/commit/141c92bb42eecec77db930ee57a872cb0cfcd350))
+
 ## [0.1.2](https://github.com/TQKNG/n8n-azure-automation/compare/v0.1.1...v0.1.2) (2026-06-05)
 
 
