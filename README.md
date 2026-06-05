@@ -7,7 +7,7 @@ This repository provisions:
 - Dockerized n8n + Caddy reverse proxy on the VM
 - HTTPS with automatic TLS certificates (Let's Encrypt)
 - Operational scripts for deployment, health checks, and backups
-- GitHub Actions workflows for setup, deploy, post-DNS start, and teardown
+- GitHub Actions workflows for setup, deploy, post-DNS start, teardown, and automated releases
 
 ## Architecture
 
@@ -35,7 +35,10 @@ Runtime stack:
 │  ├─ 02-verify-azure-oidc.yml
 │  ├─ 03-deploy.yml
 │  ├─ 04-start-n8n.yml
-│  └─ 05-teardown.yml
+│  ├─ 05-teardown.yml
+│  ├─ 06-pr-title-lint.yml
+│  ├─ 07-release-please.yml
+│  └─ 08-sync-version-file.yml
 ├─ infrastructure/
 │  ├─ main.bicep
 │  ├─ modules/
@@ -56,6 +59,8 @@ Runtime stack:
 │  │     └─ health-check.sh
 │  └─ scripts/
 │     └─ cloud-init-template.yml
+├─ .release-please-config.json
+├─ .release-please-manifest.json
 ├─ CHANGELOG.md
 ├─ LICENSE
 └─ README.md
@@ -99,6 +104,15 @@ Workflow files:
 - `.github/workflows/03-deploy.yml`
 - `.github/workflows/04-start-n8n.yml`
 - `.github/workflows/05-teardown.yml`
+
+Release and versioning workflows:
+- `.github/workflows/06-pr-title-lint.yml`
+- `.github/workflows/07-release-please.yml`
+- `.github/workflows/08-sync-version-file.yml`
+
+Release configuration:
+- `.release-please-config.json`
+- `.release-please-manifest.json`
 
 ## Required Secrets and Variables
 
@@ -181,6 +195,31 @@ for module in infrastructure/modules/*.bicep; do
   az bicep build --file "$module"
 done
 ```
+
+## Versioning and Automatic Releases
+
+This repository uses Semantic Versioning (`vMAJOR.MINOR.PATCH`) with automated release management.
+
+How it works:
+1. Pull requests must use Conventional Commit style in PR titles (validated by `06-pr-title-lint.yml`).
+2. Pushes to `main` trigger `07-release-please.yml`.
+3. Release Please creates or updates a release PR that:
+	- updates `CHANGELOG.md`
+	- updates `.release-please-manifest.json`
+4. When the release PR is merged, Release Please creates:
+	- Git tag (for example `v0.2.0`)
+	- GitHub Release
+5. Published release events trigger `08-sync-version-file.yml` to mirror the tag version into `.version`.
+
+Conventional PR title examples:
+- `feat: add staging deployment inputs`
+- `fix: handle cloud-init timeout retries`
+- `docs: clarify DNS cutover step`
+- `feat!: change default network CIDR`
+
+Breaking changes:
+- Use `!` in the PR title (for example `feat!: ...`) or include a `BREAKING CHANGE:` note in the PR description/body.
+- This causes a major version bump.
 
 ## Versioning and License
 
