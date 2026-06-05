@@ -1,4 +1,4 @@
-# n8n Azure Automation
+# N8N Azure Automation 🚀
 
 Automated Infrastructure as Code deployment for a production-ready n8n instance on Azure.
 
