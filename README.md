@@ -1,6 +1,6 @@
 # N8N Azure Automation 🚀
 
-Automated Infrastructure as Code deployment for a production-ready n8n instance on Azure.
+Automated Infrastructure as Code deployment (IAC) for a production-ready n8n instance on Azure.
 
 This repository provisions:
 - Azure networking, NSG, and Ubuntu VM via Bicep
