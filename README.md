@@ -200,6 +200,8 @@ done
 
 ## Versioning and License
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution and pull request guidance.
+
 - Current version: `0.1.0` (see `.version`)
 - Changelog: `CHANGELOG.md`
 - License: MIT (`LICENSE`)
